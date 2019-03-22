@@ -1,6 +1,6 @@
 <?php
 require_once './day.php';
-require_once  './compilation.php';
+require_once './difference.php';
 
 abstract class Date
 {
@@ -17,7 +17,10 @@ abstract class Date
      */
     public function __construct($first, $second)
     {
-        $this->isCorrectData($first, $second);
+        try {
+            $this->isCorrectData($first, $second);
+        } catch (Exception $e) {
+        }
     }
 
 
@@ -28,8 +31,8 @@ abstract class Date
      */
     protected function isCorrectData($first, $second)
     {
-        if(!preg_match('#^[0-9]{1,}-[0-9]{2}-[0-9]{2}$#', $first) == 1 ||
-            !preg_match('#^[0-9]{1,}-[0-9]{2}-[0-9]{2}$#', $second) == 1) {
+        if(!preg_match('#^[0-9]{1,}-[0-9]{1,2}-[0-9]{1,2}$#', $first) == 1 ||
+            !preg_match('#^[0-9]{1,}-[0-9]{1,2}-[0-9]{1,2}$#', $second) == 1) {
             throw new Exception('Invalid data entered!');
         }else{
             $first = explode('-', $first);

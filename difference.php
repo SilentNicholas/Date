@@ -1,11 +1,28 @@
 <?php
+if(!$argc = 3){
+    die (PHP_EOL. 'USE: php difference.php YYYY-MM-DD YYYY-MM-DD!'. PHP_EOL);
+}
+$first = $argc[1];
+$second = $argc[2];
+
 require_once './date.php';
 require_once './day.php';
 
 
-class Compilation extends Day
+class Difference extends Day
 {
     const MONTH = (365 + 365 + 365 + 366) / (4 * 12);
+
+    /**
+     * Difference constructor.
+     * @param $first
+     * @param $second
+     * @throws Exception
+     */
+    public function __construct($first, $second)
+    {
+        parent::__construct($first, $second);
+    }
 
     /**
      * @return int
@@ -50,3 +67,6 @@ class Compilation extends Day
     }
 
 }
+
+$diff = new Difference($first, $second);
+$diff->getReadyData();
