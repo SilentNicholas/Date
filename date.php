@@ -1,13 +1,16 @@
 <?php
-require_once './day.php';
-require_once './difference.php';
+if(!$argc = 3){
+    die (PHP_EOL. 'USE: php date.php YYYY-MM-DD YYYY-MM-DD!'. PHP_EOL);
+}
+$first = $argv[1];
+$second = $argv[2];
 
-abstract class Date
+require_once './validate.php';
+require_once './calculations.php';
+
+class Date
 {
-    protected $first;
-    protected $second;
-    protected $validate;
-
+    private $calculations;
 
     /**
      * Date constructor.
@@ -17,94 +20,72 @@ abstract class Date
      */
     public function __construct($first, $second)
     {
-        try {
-            $this->isCorrectData($first, $second);
-        } catch (Exception $e) {
-        }
+        $this->calculations = new Calculations($first, $second);
     }
 
-
     /**
-     * @param $first
-     * @param $second
-     * @throws Exception
+     * Take you two date difference.
      */
-    protected function isCorrectData($first, $second)
+    public function getReadyData()
     {
-        if(!preg_match('#^[0-9]{1,}-[0-9]{1,2}-[0-9]{1,2}$#', $first) == 1 ||
-            !preg_match('#^[0-9]{1,}-[0-9]{1,2}-[0-9]{1,2}$#', $second) == 1) {
-            throw new Exception('Invalid data entered!');
-        }else{
-            $first = explode('-', $first);
-            $second = explode('-', $second);
-            $this->validateYears($first, $second);
-            $this->validateFirstMonth($first);
-            $this->validateSecondMonth($second);
-        }
+        echo 'Years: ' . $this->getYears() . PHP_EOL . 'Months: '. $this->getMonths() . PHP_EOL . 'Days: '. $this->getDays().
+            PHP_EOL . 'Total Days: ' . $this->getTotalDays() . PHP_EOL . 'Date of start greater: ' . $this->whichDateGreater();
     }
 
     /**
-     * @param $first
-     * @throws Exception
+     * @return int
      */
-    protected function validateFirstMonth($first)
+    public function getYears()
     {
-        if($first[1] > 12 || $first[1] < 1) {
-            throw new Exception('Month in your first date does not exist!');
-        }elseif($first[2] < 1) {
-            throw new Exception('Day of month in your first date does not exist!');
-        }elseif($first[1] % 2 == 0 && $first[1] !== 8 && $first[2] > 30) {
-            throw new Exception('In your first date month has only 30 days!');
-        }else{
-            $this->first = $first;
+        $days = $this->getTotalDays();
+        $i = 0;
+        while ($days > 364) {
+            $days -= 365;
+            $i++;
+            if ($this->calculations->validate->ifLeapYear($i)) {
+                $days -= 1;
+            }
         }
+        return $i;
     }
 
     /**
-     * @param $second
-     * @throws Exception
+     * @return int
      */
-    protected function ValidateSecondMonth($second)
+    public function getMonths()
     {
-        if($second[1] > 12 || $second[1] < 1) {
-            throw new Exception('Month in your second date does not exist!');
-        }elseif($second[2] < 1) {
-            throw new Exception('Day of month in your second date does not exist!');
-        }elseif($second[1] % 2 == 0 && $second[1] !== 8 && $second[2] > 30) {
-            throw new Exception('In your second date month has only 30 days!');
-        }else{
-            $this->second = $second;
-        }
+        return floor($this->getTotalDays() / Calculations::MONTH) -  ($this->getYears() * 12);
     }
 
+
     /**
-     * @param $first
-     * @param $second
-     * @throws Exception
+     * @return int
      */
-    protected function validateYears($first, $second)
+    public function getDays()
     {
-        if($this->ifLeapYear($first[0]) && $first[1] == 2 && $first[2] > 29){
-            throw new Exception('In your first date month has only 29 days!');
-        }elseif($this->ifLeapYear($second[0]) && $second[1] == 2 && $this->second[2] > 29){
-            throw new Exception('In your second date month has only 29 days!');
-        }elseif(!$this->ifLeapYear($first[0]) && $first[1] == 2 && $first[2] > 28){
-            throw new Exception('In your first date month has only 28 days!');
-        }elseif(!$this->ifLeapYear($first[0]) && $second[1] == 2 && $second[2] > 28){
-            throw new Exception('In your second date month has only 28 days!');
-        }
+        return round(((($this->getTotalDays() / Calculations::MONTH) -  ($this->getYears() * 12)) - $this->getMonths()) * Calculations::MONTH);
     }
 
     /**
-     * @param $year
+     * @return int
+     */
+    public function getTotalDays()
+    {
+        return abs($this->calculations->getTotalDayInSecond() - $this->calculations->getTotalDayInFirst());
+    }
+
+    /**
      * @return bool
      */
-    protected function ifLeapYear($year)
+    private function whichDateGreater()
     {
-        if($year % 4 == 0 && !$year % 100 == 0){
-            return True;
+        if($this->calculations->getTotalDayInFirst() > $this->calculations->getTotalDayInSecond()){
+            return 'True';
         }else{
-            return False;
+            return 'False';
         }
     }
 }
+
+$date = new Date( $first, $second);
+$date->getReadyData();
