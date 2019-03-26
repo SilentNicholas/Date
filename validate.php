@@ -4,96 +4,152 @@ require_once './calculations.php';
 
 class Validate
 {
+    const FEBRUARY = 2;
 
     /**
-     * @param $date
-     * @return array
-     */
-    public function arrayWithDate($date)
-    {
-        $first = explode('-', $date);
-        return $first;
-    }
-
-    /**
-     * @param $first
-     * @param $second
+     * Validate constructor.
+     * @param string $first
+     * @param string $second
      * @throws Exception
      */
-    public function isCorrectData($first, $second)
+    public function __construct($first, $second)
     {
-        if(!preg_match('#^[0-9]{1,}-[0-9]{1,2}-[0-9]{1,2}$#', $first) == 1 ||
-            !preg_match('#^[0-9]{1,}-[0-9]{1,2}-[0-9]{1,2}$#', $second) == 1) {
-            throw new Exception('Invalid data entered!');
-        }else{
-            $this->validateYears($first, $second);
-            $this->validateFirstMonth($first);
-            $this->validateSecondMonth($second);
-        }
+        $this->validate($first, $second);
     }
 
     /**
-     * @param $first
-     * @throws Exception
-     */
-    private function validateFirstMonth($first)
-    {
-        $first = $this->arrayWithDate($first);
-        if($first[1] > 12 || $first[1] < 1) {
-            throw new Exception('Month in your first date does not exist!');
-        }elseif($first[2] < 1) {
-            throw new Exception('Day of month in your first date does not exist!');
-        }elseif($first[1] % 2 == 0 && $first[1] !== 8 && $first[2] > 30) {
-            throw new Exception('In your first date month has only 30 days!');
-        }
-    }
-
-    /**
-     * @param $second
-     * @throws Exception
-     */
-    private function ValidateSecondMonth($second)
-    {
-        $second = $this->arrayWithDate($second);
-        if($second[1] > 12 || $second[1] < 1) {
-            throw new Exception('Month in your second date does not exist!');
-        }elseif($second[2] < 1) {
-            throw new Exception('Day of month in your second date does not exist!');
-        }elseif($second[1] % 2 == 0 && $second[1] !== 8 && $second[2] > 30) {
-            throw new Exception('In your second date month has only 30 days!');
-        }
-    }
-
-    /**
-     * @param $first
-     * @param $second
-     * @throws Exception
-     */
-    private function validateYears($first, $second)
-    {
-        $first = $this->arrayWithDate($first);
-        $second = $this->arrayWithDate($second);
-        if($this->ifLeapYear($first[0]) && $first[1] == 2 && $first[2] > 29){
-            throw new Exception('In your first date month has only 29 days!');
-        }elseif($this->ifLeapYear($second[0]) && $second[1] == 2 && $second[2] > 29){
-            throw new Exception('In your second date month has only 29 days!');
-        }elseif(!$this->ifLeapYear($first[0]) && $first[1] == 2 && $first[2] > 28){
-            throw new Exception('In your first date month has only 28 days!');
-        }elseif(!$this->ifLeapYear($first[0]) && $second[1] == 2 && $second[2] > 28){
-            throw new Exception('In your second date month has only 28 days!');
-        }
-    }
-
-    /**
-     * @param $year
+     * @param string $year
      * @return bool
      */
     public function ifLeapYear($year)
     {
-        if($year % 4 == 0 && !$year % 100 == 0){
-            return True;
+        return $year % 4 === 0 && !$year % 100 === 0;
+    }
+
+    /**
+     * @param string $date
+     * @return false|int
+     */
+    private function splitDate($date)
+    {
+        return preg_match('#^[0-9]{1,}-[0-9]{1,2}-[0-9]{1,2}$#', $date);
+    }
+
+    /**
+     * @param string $date
+     * @return bool|string
+     */
+    private function getYear($date)
+    {
+        return substr($date, 0, 4);
+    }
+
+    /**
+     * @param string $date
+     * @return bool|string
+     */
+    private function getMonth($date)
+    {
+        return substr($date, 5, 2);
+    }
+
+    /**
+     * @param string $date
+     * @return bool|string
+     */
+    private function getDay($date)
+    {
+        return substr($date, 8, 2);
+    }
+
+    /**
+     * @param string $date
+     * @throws Exception
+     */
+    private function validateMonths($date)
+    {
+        if($this->getMonth($date) < 1 || $this->getMonth($date) > 12){
+            throw new Exception('Invalid month entered!');
+        }
+    }
+
+    /**
+     * @param string $date
+     * @throws Exception
+     */
+    private function validateDaysInLongMonths($date)
+    {
+        $month = $this->getMonth($date);
+        $days = $this->getDay($date);
+        if($month == 1 || $month == 3 || $month == 5 || $month == 7 || $month == 8 || $month == 10 || $month == 12 &&
+            $days <= 0 || $days >= 32){
+            throw new Exception('Does not exist day in month!');
+        }
+    }
+
+    /**
+     * @param string $date
+     * @throws Exception
+     */
+    private function validateDaysInShortMonths($date)
+    {
+        $month = $this->getMonth($date);
+        $days = $this->getDay($date);
+        if($month == 4 || $month == 6 || $month == 9 || $month == 11 && $days < 1 || $days > 30){
+            throw new Exception('Does not exist day in month!');
+        }
+    }
+
+
+    /**
+     * @param string $date
+     * @throws Exception
+     */
+    private function validateLeapFebruary($date)
+    {
+        $year = $this->getYear($date);
+        $month = $this->getMonth($date);
+        $days = $this->getDay($date);
+        if($this->ifLeapYear($year) && $month == self::FEBRUARY && $days > 29 || $days < 1){
+            throw new Exception('Does not exist day in month!');
+        }
+    }
+
+    /**
+     * @param string $date
+     * @throws Exception
+     */
+    private function validateUsualFebruary($date)
+    {
+        $year = $this->getYear($date);
+        $month = $this->getMonth($date);
+        $days = $this->getDay($date);
+        if($this->ifLeapYear($year) && $month == self::FEBRUARY && $days > 28 || $days < 1){
+            throw new Exception('Does not exist day in month!');
+        }
+    }
+
+
+    /**
+     * @param string $first
+     * @param string $second
+     * @throws Exception
+     */
+    private function validate($first, $second)
+    {
+        if(!$this->splitDate($first) === 1 || !$this->splitDate($second) === 1) {
+            throw new Exception('Invalid data entered!');
         }else{
-            return False;
+            $this->validateMonths($first);
+            $this->validateMonths($second);
+            $this->validateDaysInShortMonths($first);
+            $this->validateDaysInShortMonths($second);
+            $this->validateDaysInLongMonths($first);
+            $this->validateDaysInLongMonths($second);
+            $this->validateLeapFebruary($first);
+            $this->validateLeapFebruary($second);
+            $this->validateUsualFebruary($first);
+            $this->validateUsualFebruary($second);
         }
     }
 }

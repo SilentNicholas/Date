@@ -4,22 +4,52 @@ require_once './validate.php';
 
 class Calculations
 {
-    const MONTH = (365 + 365 + 365 + 366) / (4 * 12);
-    private $months = [1 => 31, 2 => 28, 3 => 31, 4 => 30, 5 => 31, 6 => 30, 7 => 31, 8 => 31, 9 => 30, 10 => 31, 11 => 30, 12 => 31];
+    const FEBRUARY = 2;
+    private $months = [1 => 31, self::FEBRUARY => 28, 3 => 31, 4 => 30, 5 => 31, 6 => 30, 7 => 31, 8 => 31, 9 => 30, 10 => 31, 11 => 30, 12 => 31];
     private $first;
     private $second;
     public $validate;
 
+    /**
+     * Calculations constructor.
+     * @param string $first
+     * @param string $second
+     * @throws Exception
+     */
     public function __construct($first, $second)
     {
-        $this->validate = new Validate();
-        $this->validate->isCorrectData($first, $second);
-        $this->first = $this->validate->arrayWithDate($first);
-        $this->second = $this->validate->arrayWithDate($second);
+        $this->validate = new Validate($first, $second);
+        $this->first = $this->arrayFromString($first);
+        $this->second = $this->arrayFromString($second);
     }
 
     /**
-     * @param $year
+     * @param string $date
+     * @return array
+     */
+    public function arrayFromString($date)
+    {
+        return explode('-', $date);
+    }
+
+    /**
+     * @return array
+     */
+    public function getFirstDate()
+    {
+        return $this->first;
+    }
+
+    /**
+     * @return array
+     */
+    public function getSecondDate()
+    {
+        return $this->second;
+    }
+
+    /**
+     * @param string $year
      * @return int
      */
     public function daysInYear($year)
@@ -36,9 +66,9 @@ class Calculations
     }
 
     /**
-     * @param $year
-     * @param $month
-     * @param $days
+     * @param string $year
+     * @param string $month
+     * @param string $days
      * @return int
      */
     public function daysWithStartYear($year, $month, $days)
@@ -46,26 +76,10 @@ class Calculations
         $count = $days;
         for($i = 1; $i < $month; $i++){
             $count += $this->months[$i];
-            if($i === 2 && $this->validate->ifLeapYear($year)){
+            if($i === self::FEBRUARY && $this->validate->ifLeapYear($year)){
                 $count += 1;
             }
         }
         return $count;
-    }
-
-    /**
-     * @return int
-     */
-    public function getTotalDayInFirst()
-    {
-        return $this->daysInYear($this->first[0]) + $this->daysWithStartYear($this->first[0], $this->first[1], $this->first[2]);
-    }
-
-    /**
-     * @return int
-     */
-    public function getTotalDayInSecond()
-    {
-        return $this->daysInYear($this->second[0]) + $this->daysWithStartYear($this->second[0], $this->second[1], $this->second[2]);
     }
 }
